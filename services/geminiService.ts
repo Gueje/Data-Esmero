@@ -13,8 +13,14 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  // Inicialización directa según estándares de seguridad
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    throw new Error("KEY_NOT_FOUND");
+  }
+
+  // Inicialización limpia según la documentación oficial
+  const ai = new GoogleGenAI({ apiKey });
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
@@ -44,7 +50,7 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       model: 'gemini-3-pro-preview',
       contents: promptBody,
       config: {
-        thinkingConfig: { thinkingBudget: 0 }, // Desactivado para evitar bloqueos por tokens en claves free/limitadas
+        thinkingConfig: { thinkingBudget: 16000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -59,11 +65,12 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
     });
 
     let text = response.text || "";
-    // Limpieza robusta de la respuesta
     text = text.replace(/```json\n?|```/g, "").trim();
     return JSON.parse(text) as OptimizedPromptResponse;
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    throw error;
+    // Capturamos el error original para el diagnóstico
+    const apiErrorMessage = error?.message || "Error desconocido en la API";
+    console.error("Gemini API Full Error:", error);
+    throw new Error(apiErrorMessage);
   }
 };
