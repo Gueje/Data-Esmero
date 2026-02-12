@@ -13,6 +13,7 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
+  // Inicializamos la IA justo antes de usarla para capturar la clave más reciente (Vercel o Selector)
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   
   const isInitial = mode === 'INITIAL';
@@ -25,20 +26,19 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       Sigue este template estrictamente:
       ${INITIAL_PROMPT_TEMPLATE}
       
-      Debes:
-      1. Determinar si requiere "DATO EXACTO" o "ANÁLISIS".
-      2. Reformular la pregunta para que sea técnica, clara y elimine ambigüedades.
-      3. Asegurar que el prompt final sea una instrucción poderosa y completa.`
+      Debes devolver un JSON con:
+      1. optimizedPrompt: El prompt final listo para usar.
+      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
+      3. reasoning: Tu explicación técnica.`
     : `Eres un asistente que ayuda a pulir preguntas para una IA en una conversación ya iniciada. 
-      Tu objetivo es tomar la idea del usuario y hacerla más clara, técnica y profesional para que la IA entienda mejor la intención.
-      
-      IMPORTANTE: NO incluyas instrucciones sobre alucinaciones, protocolos de error, Python o archivos en el resultado final. Solo entrega la pregunta pulida y natural.
+      Toma la idea del usuario y hazla más clara, técnica y profesional. No incluyas protocolos de error o Python aquí.
       
       Entrada del usuario: "${userInput}"
       
-      Debes devolver:
-      1. La pregunta optimizada (fresca, natural y directa).
-      2. El modo sugerido ([DATO EXACTO] o [ANÁLISIS]).`;
+      Debes devolver un JSON con:
+      1. optimizedPrompt: La pregunta pulida.
+      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
+      3. reasoning: Por qué se optimizó así.`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -49,19 +49,9 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          optimizedPrompt: {
-            type: Type.STRING,
-            description: "El prompt final optimizado."
-          },
-          suggestedMode: {
-            type: Type.STRING,
-            enum: ["DATO EXACTO", "ANÁLISIS"],
-            description: "El modo seleccionado para el contexto de la respuesta."
-          },
-          reasoning: {
-            type: Type.STRING,
-            description: "Breve explicación de por qué se optimizó de esta forma."
-          }
+          optimizedPrompt: { type: Type.STRING },
+          suggestedMode: { type: Type.STRING, enum: ["DATO EXACTO", "ANÁLISIS"] },
+          reasoning: { type: Type.STRING }
         },
         required: ["optimizedPrompt", "suggestedMode", "reasoning"]
       }
@@ -69,10 +59,12 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
   });
 
   try {
-    const text = response.text.trim();
+    let text = response.text || "";
+    // Limpieza de posibles bloques de código Markdown
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(text) as OptimizedPromptResponse;
   } catch (error) {
     console.error("Error parsing Gemini response:", error);
-    throw new Error("No se pudo optimizar el prompt.");
+    throw error;
   }
 };

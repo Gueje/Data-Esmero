@@ -8,9 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-      // Shim para evitar errores de 'process is not defined' en el navegador
-      window.process = window.process || { env: { API_KEY: '' } };
-      
       tailwind.config = {
         theme: {
           extend: {
@@ -52,7 +49,6 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
     <div id="root"></div>
-    <!-- Punto de entrada de la aplicación -->
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>

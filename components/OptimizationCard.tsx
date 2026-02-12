@@ -16,16 +16,33 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OptimizedPromptResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleOptimize = async () => {
     if (!input.trim()) return;
     setLoading(true);
     setResult(null);
+    setErrorMsg(null);
+    
     try {
       const data = await optimizePrompt(input, mode);
       setResult(data);
-    } catch (error) {
-      alert("Error al optimizar. Revisa la consola.");
+    } catch (error: any) {
+      console.error("Optimization Error:", error);
+      const message = error.message || "";
+      
+      if (message.includes("Requested entity was not found") || message.includes("API_KEY") || !process.env.API_KEY) {
+        // Si hay un problema de clave, intentamos abrir el selector de AI Studio
+        if (window.aistudio) {
+          setErrorMsg("Configuración requerida. Abre el selector de clave.");
+          await window.aistudio.openSelectKey();
+          // Después de abrir el selector, el usuario puede intentar de nuevo
+        } else {
+          setErrorMsg("Error de API: Verifica tu API Key en Vercel.");
+        }
+      } else {
+        setErrorMsg("Error al optimizar. Intenta nuevamente.");
+      }
     } finally {
       setLoading(false);
     }
@@ -68,6 +85,21 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
             <span>{loading ? 'Optimizando...' : 'Optimizar'}</span>
           </button>
         </div>
+
+        {errorMsg && (
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-[10px] font-bold rounded-xl flex items-center space-x-2 border border-red-100 animate-fadeIn">
+            <i className="fa-solid fa-circle-exclamation"></i>
+            <span>{errorMsg}</span>
+            {errorMsg.includes("selector") && (
+              <button 
+                onClick={() => window.aistudio?.openSelectKey()}
+                className="underline ml-auto"
+              >
+                Abrir ahora
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {result && (
