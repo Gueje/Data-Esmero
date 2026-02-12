@@ -1,38 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const Header: React.FC = () => {
-  const [keyStatus, setKeyStatus] = useState<'CHECKING' | 'CONNECTED' | 'DISCONNECTED'>('CHECKING');
-
-  useEffect(() => {
-    const checkKey = async () => {
-      const envKey = process.env.API_KEY;
-      if (envKey && envKey.length > 5) {
-        setKeyStatus('CONNECTED');
-        return;
-      }
-
-      if (window.aistudio) {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setKeyStatus(selected ? 'CONNECTED' : 'DISCONNECTED');
-      } else {
-        setKeyStatus('DISCONNECTED');
-      }
-    };
-    checkKey();
-    
-    // Escuchar posibles cambios (por si el usuario abre el selector)
-    const interval = setInterval(checkKey, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleConfigKey = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-    } else {
-      alert("Para configurar la llave, debes definir API_KEY en las variables de entorno de Vercel y realizar un REDEPLOY.");
-    }
-  };
+  const isConnected = !!process.env.API_KEY && process.env.API_KEY.length > 5;
 
   return (
     <header className="bg-brand text-white shadow-lg sticky top-0 z-50">
@@ -56,28 +26,23 @@ const Header: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-2 mr-4">
-              <div className={`w-2 h-2 rounded-full ${
-                keyStatus === 'CONNECTED' ? 'bg-brand-accent animate-pulse' : 
-                keyStatus === 'CHECKING' ? 'bg-gray-400' : 'bg-red-400'
-              }`}></div>
-              <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">
-                {keyStatus === 'CONNECTED' ? 'Sistema Online' : 
-                 keyStatus === 'CHECKING' ? 'Verificando...' : 'Sin Conexión'}
+            <div className="flex items-center space-x-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+              <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-brand-accent animate-pulse' : 'bg-red-400'}`}></div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+                {isConnected ? 'Sistema Activo' : 'Clave no detectada'}
               </span>
             </div>
-
-            <button 
-              onClick={handleConfigKey}
-              className={`text-[10px] font-bold px-4 py-2 rounded-full border transition-all flex items-center space-x-2 ${
-                keyStatus === 'CONNECTED' 
-                  ? 'border-white/20 hover:bg-white/10' 
-                  : 'border-brand-accent text-brand-accent bg-brand-accent/5'
-              }`}
-            >
-              <i className={`fa-solid ${keyStatus === 'CONNECTED' ? 'fa-shield-check' : 'fa-key'}`}></i>
-              <span>{keyStatus === 'CONNECTED' ? 'Acceso OK' : 'Vincular Acceso'}</span>
-            </button>
+            
+            {!isConnected && (
+              <a 
+                href="https://vercel.com/docs/projects/environment-variables" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hidden sm:block text-[9px] font-bold text-white/40 hover:text-white transition-colors uppercase underline"
+              >
+                Ayuda de configuración
+              </a>
+            )}
           </div>
         </div>
       </div>

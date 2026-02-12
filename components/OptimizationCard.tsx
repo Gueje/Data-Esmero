@@ -30,15 +30,12 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
     } catch (error: any) {
       console.error("Optimization Error:", error);
       
-      if (error.message === "MISSING_KEY" || error.message === "INVALID_KEY") {
-        if (window.aistudio) {
-          setErrorMsg("Acceso no configurado. Por favor, selecciona una clave.");
-          await window.aistudio.openSelectKey();
-        } else {
-          setErrorMsg("La API Key en Vercel no es válida o falta. Revisa la configuración de Vercel.");
-        }
+      const isAuthError = error.message?.includes("API_KEY") || error.message?.includes("403") || error.message?.includes("401");
+      
+      if (isAuthError) {
+        setErrorMsg("Error de Acceso: La clave de API no es válida o falta en Vercel.");
       } else {
-        setErrorMsg("Error de conexión. Verifica tu internet o la clave de API.");
+        setErrorMsg("Error del Servicio: Revisa la conexión o intenta con un prompt más corto.");
       }
     } finally {
       setLoading(false);
@@ -84,19 +81,9 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-2xl flex items-center justify-between border border-red-100 animate-fadeIn">
-            <div className="flex items-center space-x-2">
-              <i className="fa-solid fa-circle-exclamation"></i>
-              <span>{errorMsg}</span>
-            </div>
-            {window.aistudio && (
-              <button 
-                onClick={() => window.aistudio?.openSelectKey()}
-                className="bg-white px-3 py-1 rounded-lg shadow-sm text-[10px] hover:bg-gray-50 transition-colors"
-              >
-                Configurar
-              </button>
-            )}
+          <div className="mb-6 p-4 bg-red-50 text-red-600 text-[11px] font-bold rounded-2xl flex items-center space-x-2 border border-red-100 animate-fadeIn">
+            <i className="fa-solid fa-circle-exclamation text-sm"></i>
+            <span>{errorMsg}</span>
           </div>
         )}
       </div>

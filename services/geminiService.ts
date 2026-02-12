@@ -13,13 +13,8 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  const apiKey = process.env.API_KEY;
-  
-  if (!apiKey || apiKey === "") {
-    throw new Error("MISSING_KEY");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Inicialización directa según estándares de seguridad
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
@@ -49,7 +44,7 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       model: 'gemini-3-pro-preview',
       contents: promptBody,
       config: {
-        thinkingConfig: { thinkingBudget: 16000 }, // Reducido ligeramente para mayor estabilidad
+        thinkingConfig: { thinkingBudget: 0 }, // Desactivado para evitar bloqueos por tokens en claves free/limitadas
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -64,12 +59,11 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
     });
 
     let text = response.text || "";
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    // Limpieza robusta de la respuesta
+    text = text.replace(/```json\n?|```/g, "").trim();
     return JSON.parse(text) as OptimizedPromptResponse;
   } catch (error: any) {
-    if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403") || error.message?.includes("401")) {
-      throw new Error("INVALID_KEY");
-    }
+    console.error("Gemini API Error:", error);
     throw error;
   }
 };
