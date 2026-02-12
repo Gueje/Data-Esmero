@@ -7,11 +7,13 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center space-x-3">
-            <div className="bg-brand-accent p-2 rounded-xl">
-              <i className="fa-solid fa-wand-magic-sparkles text-brand text-2xl"></i>
-            </div>
+            <img 
+              src="https://raw.githubusercontent.com/Gueje/Data-Esmero/refs/heads/main/Simbolo_Esmero_blanco.png" 
+              alt="Logo Esmero" 
+              className="h-10 w-auto object-contain"
+            />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Data Esmero</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">Data Esmero</h1>
               <p className="text-xs text-brand-light font-medium uppercase tracking-widest">Generador de prompts</p>
             </div>
           </div>

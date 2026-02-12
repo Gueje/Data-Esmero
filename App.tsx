@@ -36,9 +36,14 @@ const App: React.FC = () => {
         </div>
 
         <div className="mt-20">
-          <div className="text-center mb-10">
+          <div className="text-center mb-10 flex flex-col items-center">
+            <img 
+              src="https://www.esmero.com.co/wp-content/uploads/2025/03/logo_esmero_principal.svg" 
+              alt="Logo Esmero Principal" 
+              className="h-24 w-auto mb-8"
+            />
             <h3 className="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
-              ¡Juntos! vamos a llevar a Esmero a otro nivel con la IA
+              ¡Juntos! vamos a llegar a otro nivel con la IA
             </h3>
           </div>
           
