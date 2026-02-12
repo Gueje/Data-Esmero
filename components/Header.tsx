@@ -6,15 +6,21 @@ const Header: React.FC = () => {
     <header className="bg-brand text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <img 
-              src="https://raw.githubusercontent.com/Gueje/Data-Esmero/refs/heads/main/Simbolo_Esmero_blanco.png" 
+              src="https://raw.githubusercontent.com/Gueje/Imagenes/refs/heads/main/Simbolo_Esmero_blanco.png" 
               alt="Logo Esmero" 
-              className="h-10 w-auto object-contain"
+              className="h-12 w-auto object-contain"
+              onError={(e) => {
+                // Fallback en caso de error: usar logo principal con filtro de brillo
+                const target = e.target as HTMLImageElement;
+                target.src = "https://www.esmero.com.co/wp-content/uploads/2025/03/logo_esmero_principal.svg";
+                target.style.filter = "brightness(0) invert(1)";
+              }}
             />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white leading-tight">Data Esmero</h1>
-              <p className="text-xs text-brand-light font-medium uppercase tracking-widest">Generador de prompts</p>
+            <div className="border-l border-white/20 pl-4">
+              <h1 className="text-2xl font-black tracking-tighter text-white leading-none">Data Esmero</h1>
+              <p className="text-[10px] text-brand-light font-bold uppercase tracking-[0.2em] mt-1 opacity-80">Generador de Prompts</p>
             </div>
           </div>
         </div>
