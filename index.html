@@ -4,10 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PromptMaster - Corporate AI Optimizer</title>
+    <title>Data Esmero - Generador de prompts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
+      // Shim para evitar errores de 'process is not defined' en el navegador
+      window.process = window.process || { env: { API_KEY: '' } };
+      
       tailwind.config = {
         theme: {
           extend: {
@@ -16,6 +19,20 @@
                 DEFAULT: '#8B3DFF',
                 accent: '#50E3C2',
                 light: '#B2F7E6'
+              }
+            },
+            animation: {
+              fadeIn: 'fadeIn 0.5s ease-out forwards',
+              slideUp: 'slideUp 0.4s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { transform: 'translateY(10px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
               }
             }
           }
@@ -35,5 +52,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
     <div id="root"></div>
+    <!-- Punto de entrada de la aplicación -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
