@@ -13,9 +13,13 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  // Inicializamos la IA justo antes de usarla para capturar la clave más reciente (Vercel o Selector)
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  const apiKey = process.env.API_KEY;
   
+  if (!apiKey || apiKey === "") {
+    throw new Error("MISSING_KEY");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
@@ -40,31 +44,32 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
       3. reasoning: Por qué se optimizó así.`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
-    contents: promptBody,
-    config: {
-      thinkingConfig: { thinkingBudget: 32768 },
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          optimizedPrompt: { type: Type.STRING },
-          suggestedMode: { type: Type.STRING, enum: ["DATO EXACTO", "ANÁLISIS"] },
-          reasoning: { type: Type.STRING }
-        },
-        required: ["optimizedPrompt", "suggestedMode", "reasoning"]
-      }
-    }
-  });
-
   try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: promptBody,
+      config: {
+        thinkingConfig: { thinkingBudget: 16000 }, // Reducido ligeramente para mayor estabilidad
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            optimizedPrompt: { type: Type.STRING },
+            suggestedMode: { type: Type.STRING, enum: ["DATO EXACTO", "ANÁLISIS"] },
+            reasoning: { type: Type.STRING }
+          },
+          required: ["optimizedPrompt", "suggestedMode", "reasoning"]
+        }
+      }
+    });
+
     let text = response.text || "";
-    // Limpieza de posibles bloques de código Markdown
     text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(text) as OptimizedPromptResponse;
-  } catch (error) {
-    console.error("Error parsing Gemini response:", error);
+  } catch (error: any) {
+    if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403") || error.message?.includes("401")) {
+      throw new Error("INVALID_KEY");
+    }
     throw error;
   }
 };

@@ -29,19 +29,16 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
       setResult(data);
     } catch (error: any) {
       console.error("Optimization Error:", error);
-      const message = error.message || "";
       
-      if (message.includes("Requested entity was not found") || message.includes("API_KEY") || !process.env.API_KEY) {
-        // Si hay un problema de clave, intentamos abrir el selector de AI Studio
+      if (error.message === "MISSING_KEY" || error.message === "INVALID_KEY") {
         if (window.aistudio) {
-          setErrorMsg("Configuración requerida. Abre el selector de clave.");
+          setErrorMsg("Acceso no configurado. Por favor, selecciona una clave.");
           await window.aistudio.openSelectKey();
-          // Después de abrir el selector, el usuario puede intentar de nuevo
         } else {
-          setErrorMsg("Error de API: Verifica tu API Key en Vercel.");
+          setErrorMsg("La API Key en Vercel no es válida o falta. Revisa la configuración de Vercel.");
         }
       } else {
-        setErrorMsg("Error al optimizar. Intenta nuevamente.");
+        setErrorMsg("Error de conexión. Verifica tu internet o la clave de API.");
       }
     } finally {
       setLoading(false);
@@ -87,15 +84,17 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-3 bg-red-50 text-red-600 text-[10px] font-bold rounded-xl flex items-center space-x-2 border border-red-100 animate-fadeIn">
-            <i className="fa-solid fa-circle-exclamation"></i>
-            <span>{errorMsg}</span>
-            {errorMsg.includes("selector") && (
+          <div className="mb-6 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-2xl flex items-center justify-between border border-red-100 animate-fadeIn">
+            <div className="flex items-center space-x-2">
+              <i className="fa-solid fa-circle-exclamation"></i>
+              <span>{errorMsg}</span>
+            </div>
+            {window.aistudio && (
               <button 
                 onClick={() => window.aistudio?.openSelectKey()}
-                className="underline ml-auto"
+                className="bg-white px-3 py-1 rounded-lg shadow-sm text-[10px] hover:bg-gray-50 transition-colors"
               >
-                Abrir ahora
+                Configurar
               </button>
             )}
           </div>

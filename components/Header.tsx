@@ -2,21 +2,35 @@
 import React, { useEffect, useState } from 'react';
 
 const Header: React.FC = () => {
-  const [hasKey, setHasKey] = useState(true);
+  const [keyStatus, setKeyStatus] = useState<'CHECKING' | 'CONNECTED' | 'DISCONNECTED'>('CHECKING');
 
   useEffect(() => {
     const checkKey = async () => {
+      const envKey = process.env.API_KEY;
+      if (envKey && envKey.length > 5) {
+        setKeyStatus('CONNECTED');
+        return;
+      }
+
       if (window.aistudio) {
         const selected = await window.aistudio.hasSelectedApiKey();
-        setHasKey(selected || !!process.env.API_KEY);
+        setKeyStatus(selected ? 'CONNECTED' : 'DISCONNECTED');
+      } else {
+        setKeyStatus('DISCONNECTED');
       }
     };
     checkKey();
+    
+    // Escuchar posibles cambios (por si el usuario abre el selector)
+    const interval = setInterval(checkKey, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleConfigKey = async () => {
     if (window.aistudio) {
       await window.aistudio.openSelectKey();
+    } else {
+      alert("Para configurar la llave, debes definir API_KEY en las variables de entorno de Vercel y realizar un REDEPLOY.");
     }
   };
 
@@ -41,24 +55,29 @@ const Header: React.FC = () => {
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center space-x-4">
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-2 mr-4">
+              <div className={`w-2 h-2 rounded-full ${
+                keyStatus === 'CONNECTED' ? 'bg-brand-accent animate-pulse' : 
+                keyStatus === 'CHECKING' ? 'bg-gray-400' : 'bg-red-400'
+              }`}></div>
+              <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">
+                {keyStatus === 'CONNECTED' ? 'Sistema Online' : 
+                 keyStatus === 'CHECKING' ? 'Verificando...' : 'Sin Conexión'}
+              </span>
+            </div>
+
             <button 
               onClick={handleConfigKey}
-              className={`text-[10px] font-bold px-4 py-2 rounded-full border transition-all ${
-                hasKey ? 'border-white/20 hover:bg-white/10' : 'border-brand-accent text-brand-accent animate-pulse'
+              className={`text-[10px] font-bold px-4 py-2 rounded-full border transition-all flex items-center space-x-2 ${
+                keyStatus === 'CONNECTED' 
+                  ? 'border-white/20 hover:bg-white/10' 
+                  : 'border-brand-accent text-brand-accent bg-brand-accent/5'
               }`}
             >
-              <i className="fa-solid fa-key mr-2"></i>
-              {hasKey ? 'Acceso Vinculado' : 'Configurar Acceso'}
+              <i className={`fa-solid ${keyStatus === 'CONNECTED' ? 'fa-shield-check' : 'fa-key'}`}></i>
+              <span>{keyStatus === 'CONNECTED' ? 'Acceso OK' : 'Vincular Acceso'}</span>
             </button>
-            <a 
-              href="https://ai.google.dev/gemini-api/docs/billing" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-[10px] text-white/50 hover:text-white transition-colors"
-            >
-              Docs Facturación
-            </a>
           </div>
         </div>
       </div>
