@@ -13,9 +13,14 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  const apiKey = process.env.API_KEY;
+  // Prioridad 1: Key manual en localStorage
+  const localKey = localStorage.getItem('GEMINI_API_KEY');
+  // Prioridad 2: Key de entorno (Vercel)
+  const envKey = process.env.API_KEY;
   
-  if (!apiKey || apiKey === "") {
+  const apiKey = localKey || envKey;
+  
+  if (!apiKey || apiKey.trim() === "") {
     throw new Error("MISSING_KEY");
   }
 
@@ -23,33 +28,32 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
-    ? `Eres un experto senior en ingeniería de prompts corporativos. Tu tarea es integrar la consulta del usuario en el PROTOCOLO DE CERO ERRORES completo para INICIAR una conversación desde cero con máxima rigurosidad.
+    ? `Eres un experto senior en ingeniería de prompts corporativos. Tu tarea es integrar la consulta del usuario en el PROTOCOLO DE CERO ERRORES.
     
       Entrada del usuario: "${userInput}"
       
-      Sigue este template estrictamente:
+      Estructura obligatoria del resultado (optimizedPrompt):
       ${INITIAL_PROMPT_TEMPLATE}
       
       Debes devolver un JSON con:
       1. optimizedPrompt: El prompt final listo para usar.
       2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
-      3. reasoning: Tu explicación técnica.`
-    : `Eres un asistente que ayuda a pulir preguntas para una IA en una conversación ya iniciada. 
-      Toma la idea del usuario y hazla más clara, técnica y profesional. No incluyas protocolos de error o Python aquí.
+      3. reasoning: Tu explicación técnica breve.`
+    : `Eres un asistente que pulida preguntas para una IA en una conversación ya iniciada. 
+      Toma la idea del usuario y hazla más técnica, clara y profesional para un contexto de negocio.
       
       Entrada del usuario: "${userInput}"
       
       Debes devolver un JSON con:
       1. optimizedPrompt: La pregunta pulida.
       2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
-      3. reasoning: Por qué se optimizó así.`;
+      3. reasoning: Breve explicación de la mejora.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: promptBody,
       config: {
-        thinkingConfig: { thinkingBudget: 16000 }, // Reducido ligeramente para mayor estabilidad
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -63,11 +67,9 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       }
     });
 
-    let text = response.text || "";
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    return JSON.parse(text) as OptimizedPromptResponse;
+    return JSON.parse(response.text || "{}") as OptimizedPromptResponse;
   } catch (error: any) {
-    if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403") || error.message?.includes("401")) {
+    if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403")) {
       throw new Error("INVALID_KEY");
     }
     throw error;
