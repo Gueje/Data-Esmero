@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { OptimizedPromptResponse, OptimizationMode } from "../types";
 
 const INITIAL_PROMPT_TEMPLATE = `
-Protocolo de Cero Errores - Esmero 2025
+Protocolo de Cero Errores
 "Vamos a trabajar sobre el [ARCHIVO MADRE 2025 (CLIENTES DICIEMBRE)].
 Para esta consulta, activa el MODO [MODO_VARIABLE] y sigue estas reglas estrictas para evitar alucinaciones:
 1. Lectura obligatoria con Python: Antes de responder, usa el intérprete de código para cargar el archivo, identificar los encabezados (limpiando las filas vacías iniciales) y filtrar la información solicitada.
@@ -13,40 +13,43 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  // Acceso directo a la variable inyectada por el entorno
   const apiKey = process.env.API_KEY;
   
-  if (!apiKey) {
-    throw new Error("La clave de API no está definida. Por favor, asegúrate de haber realizado un 'Redeploy' en Vercel después de configurar las variables de entorno.");
+  if (!apiKey || apiKey === "") {
+    throw new Error("MISSING_KEY");
   }
 
-  // Usamos Gemini 3 Pro para máxima calidad en la optimización
   const ai = new GoogleGenAI({ apiKey });
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
-    ? `Eres el Ingeniero de Prompts Principal de Esmero. Tu misión es transformar la siguiente consulta en una instrucción técnica infalible usando el PROTOCOLO DE CERO ERRORES.
-      
-      CONSULTA DEL USUARIO: "${userInput}"
-      
-      INSTRUCCIONES:
-      1. Integra la consulta en este esquema: ${INITIAL_PROMPT_TEMPLATE}
-      2. Asegúrate de que el prompt resultante obligue a la IA a usar Python.
-      3. Elige el MODO_VARIABLE basado en si el usuario quiere "DATO EXACTO" o "ANÁLISIS".
-      
-      Responde EXCLUSIVAMENTE en formato JSON con la estructura:
-      { "optimizedPrompt": "...", "suggestedMode": "...", "reasoning": "..." }`
-    : `Eres un experto en refinamiento de consultas. Toma esta pregunta de seguimiento: "${userInput}" y hazla técnica, clara y orientada a resultados empresariales para Esmero. No repitas el protocolo inicial, solo mejora la pregunta.
+    ? `Eres un experto senior en ingeniería de prompts corporativos. Tu tarea es integrar la consulta del usuario en el PROTOCOLO DE CERO ERRORES completo para INICIAR una conversación desde cero con máxima rigurosidad.
     
-      Responde EXCLUSIVAMENTE en formato JSON con la estructura:
-      { "optimizedPrompt": "...", "suggestedMode": "...", "reasoning": "..." }`;
+      Entrada del usuario: "${userInput}"
+      
+      Sigue este template estrictamente:
+      ${INITIAL_PROMPT_TEMPLATE}
+      
+      Debes devolver un JSON con:
+      1. optimizedPrompt: El prompt final listo para usar.
+      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
+      3. reasoning: Tu explicación técnica.`
+    : `Eres un asistente que ayuda a pulir preguntas para una IA en una conversación ya iniciada. 
+      Toma la idea del usuario y hazla más clara, técnica y profesional. No incluyas protocolos de error o Python aquí.
+      
+      Entrada del usuario: "${userInput}"
+      
+      Debes devolver un JSON con:
+      1. optimizedPrompt: La pregunta pulida.
+      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
+      3. reasoning: Por qué se optimizó así.`;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: promptBody,
       config: {
-        thinkingConfig: { thinkingBudget: 10000 },
+        thinkingConfig: { thinkingBudget: 16000 }, // Reducido ligeramente para mayor estabilidad
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -60,10 +63,13 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       }
     });
 
-    const text = response.text || "{}";
+    let text = response.text || "";
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(text) as OptimizedPromptResponse;
   } catch (error: any) {
-    console.error("Error detallado de Gemini:", error);
-    throw new Error(error.message || "Error inesperado al conectar con Gemini");
+    if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("403") || error.message?.includes("401")) {
+      throw new Error("INVALID_KEY");
+    }
+    throw error;
   }
 };
