@@ -37,34 +37,36 @@ const App: React.FC = () => {
 
         <div className="mt-20">
           <div className="text-center mb-10 flex flex-col items-center">
-            <img 
-              src="https://www.esmero.com.co/wp-content/uploads/2025/03/logo_esmero_principal.svg" 
-              alt="Logo Esmero Principal" 
-              className="h-24 w-auto mb-8"
-            />
+            <div className="p-4 rounded-[2rem] bg-white shadow-sm border border-gray-100 mb-8">
+              <img 
+                src="https://www.esmero.com.co/wp-content/uploads/2025/03/logo_esmero_principal.svg" 
+                alt="Logo Esmero Principal" 
+                className="h-20 w-auto"
+              />
+            </div>
             <h3 className="text-3xl md:text-4xl font-black text-gray-800 tracking-tight">
               ¡Juntos! vamos a llegar a otro nivel con la IA
             </h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white/50 p-6 rounded-3xl border border-gray-100 flex items-center space-x-4 shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
-                <i className="fa-solid fa-clock text-sm"></i>
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 flex items-center space-x-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-clock text-lg"></i>
               </div>
-              <p className="text-xs text-gray-700 font-bold">Ahorro de tiempo: Automatiza tareas repetitivas y gana horas de valor.</p>
+              <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wide leading-relaxed">Ahorro de tiempo: Automatiza tareas repetitivas y gana horas de valor.</p>
             </div>
-            <div className="bg-white/50 p-6 rounded-3xl border border-gray-100 flex items-center space-x-4 shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-brand-accent/20 text-brand flex items-center justify-center shrink-0">
-                <i className="fa-solid fa-chart-line text-sm"></i>
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 flex items-center space-x-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-brand-accent/20 text-brand flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-chart-line text-lg"></i>
               </div>
-              <p className="text-xs text-gray-700 font-bold">Análisis profundo: Descubre patrones y datos clave de forma inmediata.</p>
+              <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wide leading-relaxed">Análisis profundo: Descubre patrones y datos clave de forma inmediata.</p>
             </div>
-            <div className="bg-white/50 p-6 rounded-3xl border border-gray-100 flex items-center space-x-4 shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
-                <i className="fa-solid fa-lightbulb text-sm"></i>
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 flex items-center space-x-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-lightbulb text-lg"></i>
               </div>
-              <p className="text-xs text-gray-700 font-bold">Creatividad sin límites: Genera ideas innovadoras y soluciones en segundos.</p>
+              <p className="text-[11px] text-gray-600 font-bold uppercase tracking-wide leading-relaxed">Creatividad sin límites: Genera ideas innovadoras y soluciones en segundos.</p>
             </div>
           </div>
         </div>
@@ -72,7 +74,7 @@ const App: React.FC = () => {
 
       <footer className="bg-white border-t border-gray-200 py-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-gray-500 text-sm font-bold">
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
             Data Esmero es una herramienta exclusiva para los empleados de Esmero
           </p>
         </div>
