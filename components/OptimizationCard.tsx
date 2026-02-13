@@ -28,18 +28,15 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
       const data = await optimizePrompt(input, mode);
       setResult(data);
     } catch (error: any) {
-      const rawError = error.message || "";
-      console.error("Card Error Details:", rawError);
-      
-      if (rawError === "KEY_NOT_FOUND") {
-        setErrorMsg("Error: No se encontró la API_KEY en el entorno. Revisa Vercel y haz Redeploy.");
-      } else if (rawError.includes("API key not valid")) {
-        setErrorMsg("Error: La clave de API proporcionada no es válida. Verifica en Google AI Studio.");
-      } else if (rawError.includes("403") || rawError.includes("PERMISSION_DENIED")) {
-        setErrorMsg("Error 403: La API de Gemini no está habilitada para este proyecto o clave.");
+      const msg = error.message || "";
+      if (msg === "KEY_NOT_FOUND") {
+        setErrorMsg("La API_KEY no está configurada en Vercel. Las advertencias 'npm warn' son normales, ignóralas.");
+      } else if (msg.includes("API key not valid")) {
+        setErrorMsg("La clave de API no es válida o está mal copiada.");
+      } else if (msg.includes("403")) {
+        setErrorMsg("Error 403: Debes habilitar 'Generative Language API' en tu consola de Google Cloud.");
       } else {
-        // Mostramos el error real para que el usuario pueda diagnosticarlos
-        setErrorMsg(`Error de API: ${rawError.substring(0, 100)}...`);
+        setErrorMsg(`Error: ${msg.substring(0, 100)}`);
       }
     } finally {
       setLoading(false);
@@ -85,12 +82,18 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-4 bg-red-50 text-red-600 text-[11px] font-bold rounded-2xl flex flex-col space-y-1 border border-red-100 animate-fadeIn">
-            <div className="flex items-center space-x-2">
-              <i className="fa-solid fa-circle-exclamation text-sm"></i>
-              <span>{errorMsg}</span>
+          <div className="mb-6 p-4 bg-red-50 text-red-600 text-[11px] font-bold rounded-2xl border border-red-100 animate-fadeIn">
+            <div className="flex items-start space-x-2">
+              <i className="fa-solid fa-circle-exclamation mt-0.5"></i>
+              <div className="flex flex-col">
+                <span>{errorMsg}</span>
+                <ul className="mt-2 space-y-1 opacity-80 text-[10px] list-disc ml-4">
+                  <li>Las alertas 'npm warn' son normales del despliegue.</li>
+                  <li>Asegúrate de haber hecho 'Redeploy' en Vercel.</li>
+                  <li>Verifica que la variable se llame exactamente <b>API_KEY</b>.</li>
+                </ul>
+              </div>
             </div>
-            <p className="text-[9px] opacity-70 ml-6">Tip: Asegúrate de hacer 'Redeploy' en Vercel tras cambiar la clave.</p>
           </div>
         )}
       </div>
@@ -114,11 +117,9 @@ const OptimizationCard: React.FC<Props> = ({ mode, title, description, icon, pla
           <div className="bg-gray-900 p-4 rounded-xl text-gray-300 font-mono text-[11px] leading-relaxed max-h-40 overflow-y-auto mb-3 border-l-2 border-brand-accent">
             {result.optimizedPrompt}
           </div>
-          <div className="bg-brand-light/5 p-3 rounded-xl border border-brand-light/10">
-            <p className="text-[10px] text-gray-500 font-medium leading-tight">
-              {result.reasoning}
-            </p>
-          </div>
+          <p className="text-[10px] text-gray-500 font-medium leading-tight p-3 bg-gray-50 rounded-xl">
+            {result.reasoning}
+          </p>
         </div>
       )}
     </div>

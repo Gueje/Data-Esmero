@@ -13,44 +13,35 @@ Mi pregunta es la siguiente: [USER_INPUT]"
 `;
 
 export const optimizePrompt = async (userInput: string, mode: OptimizationMode): Promise<OptimizedPromptResponse> => {
-  const apiKey = process.env.API_KEY;
+  // Intentamos obtener la clave de forma segura
+  let apiKey = "";
+  try {
+    apiKey = process.env.API_KEY || "";
+  } catch (e) {
+    console.warn("Ambiente no configurado");
+  }
   
-  if (!apiKey) {
+  if (!apiKey || apiKey.length < 10) {
     throw new Error("KEY_NOT_FOUND");
   }
 
-  // Inicialización limpia según la documentación oficial
   const ai = new GoogleGenAI({ apiKey });
   const isInitial = mode === 'INITIAL';
 
   const promptBody = isInitial 
-    ? `Eres un experto senior en ingeniería de prompts corporativos. Tu tarea es integrar la consulta del usuario en el PROTOCOLO DE CERO ERRORES completo para INICIAR una conversación desde cero con máxima rigurosidad.
-    
+    ? `Eres un experto senior en ingeniería de prompts corporativos para Esmero.
       Entrada del usuario: "${userInput}"
-      
-      Sigue este template estrictamente:
+      Sigue este template estrictamente para generar el prompt optimizado:
       ${INITIAL_PROMPT_TEMPLATE}
-      
-      Debes devolver un JSON con:
-      1. optimizedPrompt: El prompt final listo para usar.
-      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
-      3. reasoning: Tu explicación técnica.`
-    : `Eres un asistente que ayuda a pulir preguntas para una IA en una conversación ya iniciada. 
-      Toma la idea del usuario y hazla más clara, técnica y profesional. No incluyas protocolos de error o Python aquí.
-      
-      Entrada del usuario: "${userInput}"
-      
-      Debes devolver un JSON con:
-      1. optimizedPrompt: La pregunta pulida.
-      2. suggestedMode: "DATO EXACTO" o "ANÁLISIS".
-      3. reasoning: Por qué se optimizó así.`;
+      Devuelve un JSON con: optimizedPrompt, suggestedMode ("DATO EXACTO" o "ANÁLISIS"), reasoning.`
+    : `Optimiza esta consulta de seguimiento para un chat de IA: "${userInput}". 
+      Hazla profesional y clara. Devuelve un JSON con: optimizedPrompt, suggestedMode, reasoning.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: promptBody,
       config: {
-        thinkingConfig: { thinkingBudget: 16000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -64,13 +55,10 @@ export const optimizePrompt = async (userInput: string, mode: OptimizationMode):
       }
     });
 
-    let text = response.text || "";
-    text = text.replace(/```json\n?|```/g, "").trim();
+    const text = response.text || "{}";
     return JSON.parse(text) as OptimizedPromptResponse;
   } catch (error: any) {
-    // Capturamos el error original para el diagnóstico
-    const apiErrorMessage = error?.message || "Error desconocido en la API";
-    console.error("Gemini API Full Error:", error);
-    throw new Error(apiErrorMessage);
+    console.error("Gemini API Error:", error);
+    throw error;
   }
 };

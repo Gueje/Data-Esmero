@@ -2,7 +2,17 @@
 import React from 'react';
 
 const Header: React.FC = () => {
-  const isConnected = !!process.env.API_KEY && process.env.API_KEY.length > 5;
+  // Verificación segura para evitar crashes en el navegador
+  const getSafeKey = () => {
+    try {
+      return process.env.API_KEY;
+    } catch {
+      return null;
+    }
+  };
+
+  const apiKey = getSafeKey();
+  const isConnected = !!apiKey && apiKey.length > 10;
 
   return (
     <header className="bg-brand text-white shadow-lg sticky top-0 z-50">
@@ -29,20 +39,9 @@ const Header: React.FC = () => {
             <div className="flex items-center space-x-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
               <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-brand-accent animate-pulse' : 'bg-red-400'}`}></div>
               <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
-                {isConnected ? 'Sistema Activo' : 'Clave no detectada'}
+                {isConnected ? 'Sistema Activo' : 'Falta Configuración'}
               </span>
             </div>
-            
-            {!isConnected && (
-              <a 
-                href="https://vercel.com/docs/projects/environment-variables" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hidden sm:block text-[9px] font-bold text-white/40 hover:text-white transition-colors uppercase underline"
-              >
-                Ayuda de configuración
-              </a>
-            )}
           </div>
         </div>
       </div>
